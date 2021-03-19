@@ -1,7 +1,9 @@
-GenITR <- function(data=list(predictor, treatment, outcome), dataRef=NULL, compareFun = function(y, yr){as.numeric(y >= yr)}, propensityEst = NULL, outcomeEst = NULL, propensityModel = 'kernel', outcomeModel = 'kernel', outcomeFormula = NULL, propensityFormula = NULL,
+GenITR <- function(data=list(predictor, treatment, outcome), dataRef=NULL, compareFun = function(y, yr){as.numeric(y >= yr)}, sampleSplitIndex = NULL, propensityEst = NULL, outcomeEst = NULL, propensityModel = 'kernel', outcomeModel = 'kernel', outcomeFormula = NULL, propensityFormula = NULL,
                    screeningMethod="SIRS", outcomeScreeningFamily = 'Gaussian', standardize = TRUE){
   size <- dim(data$predictor)[1]
-  sampleSplitIndex <- (rnorm(size) > 0)
+  if (is.null(sampleSplitIndex)){
+    sampleSplitIndex <- (rnorm(size) > 0)
+  }
 
   # standardize or not
   if(standardize){
@@ -14,7 +16,12 @@ GenITR <- function(data=list(predictor, treatment, outcome), dataRef=NULL, compa
   }
 
   # fit kernel regression
-  QEst <- apply(cbind(data$outcome, data$predictor), 1, function(t){ks(dataRef$predictor, compareFun(t[1], dataRef$outcome), t[-1])})
+  if (is.null(compareFun)){
+    QEst <- data$outcome
+  } else {
+    QEst <- apply(cbind(data$outcome, data$predictor), 1, function(t){ks(dataRef$predictor, compareFun(t[1], dataRef$outcome), t[-1])})
+  }
+
 
   # fit proposed
   fit <- NULL
@@ -32,5 +39,5 @@ GenITR <- function(data=list(predictor, treatment, outcome), dataRef=NULL, compa
   thresh <- (fit[[1]]$thresh+fit[[2]]$thresh)/2
   cov <- (fit[[1]]$cov+fit[[2]]$cov)/2
 
-  list(coef = coef, thresh = thresh, QEst = QEst, se = sqrt(diag(cov)/size))
+  list(coef = coef, thresh = thresh, QEst = QEst, se = sqrt(diag(cov)/size), D = list(fit[[1]]$D, fit[[2]]$D), predictor = list(data$predictor[sampleSplitIndex,], data$predictor[!sampleSplitIndex,]))
 }

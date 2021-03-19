@@ -74,5 +74,5 @@ GenITRSplit <- function(data=list(predictor, treatment, outcome), propensityEst 
   }
   V <- V/(sampleSize*(sampleSize-1))
   Delta <- 4*Delta/sampleSize^3
-  list(coef = coef, thresh = thresh, cov = solve(V) %*% Delta %*% solve(V))
+  list(coef = coef, thresh = thresh, cov = solve(V) %*% Delta %*% solve(V), D = weight_diff)
 }
