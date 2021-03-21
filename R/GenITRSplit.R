@@ -58,17 +58,19 @@ GenITRSplit <- function(data=list(predictor, treatment, outcome), propensityEst 
 
   ### estimate sd of coef
   sampleSize <- sum(sampleSplitIndex)
-  hopt <- (4/(ndim+2))^(1/(ndim+4)) * (sampleSize^(-1/(ndim+4)))
   link_diff <- outer(link,link,'-')
-  weight_v <- -pair_diff * exp(-0.5 * link_diff^2/(hopt^2)) / (hopt^3) * link_diff
-  weight_delta <- pair_diff * exp(-0.5 * link_diff^2/(hopt^2)) / hopt
   V <- array(0, c(ndim, ndim))
   Delta <- array(0, c(ndim, ndim))
   for (i in 1:sampleSize){
     Deltatmp <- array(0, c(ndim, ndim))
     for (j in 1:sampleSize){
-      V <- V+weight_v[i, j] * (data$predictor[sampleSplitIndex,][i,]-data$predictor[sampleSplitIndex,][j,]) %*% t(data$predictor[sampleSplitIndex,][i,]-data$predictor[sampleSplitIndex,][j,]) / hopt^2
-      Deltatmp <- Deltatmp+weight_delta[i, j]* (data$predictor[sampleSplitIndex,][i,]-data$predictor[sampleSplitIndex,][j,])
+      if (i != j){
+        hopt <- sqrt(sum((data$predictor[sampleSplitIndex,][i,]-data$predictor[sampleSplitIndex,][j,])^2))/sqrt(sampleSize)
+        weight_v <- -pair_diff[i,j] * exp(-0.5 * link_diff[i,j]^2/(hopt^2)) * link_diff[i,j] /sqrt(2*pi)
+        weight_delta <- pair_diff[i,j] * exp(-0.5 * link_diff[i,j]^2/(hopt^2)) /sqrt(2*pi)
+        V <- V+weight_v * (data$predictor[sampleSplitIndex,][i,]-data$predictor[sampleSplitIndex,][j,]) %*% t(data$predictor[sampleSplitIndex,][i,]-data$predictor[sampleSplitIndex,][j,]) / hopt^2
+        Deltatmp <- Deltatmp+weight_delta* (data$predictor[sampleSplitIndex,][i,]-data$predictor[sampleSplitIndex,][j,])/ hopt
+      }
     }
     Delta <- Delta + Deltatmp %*% t(Deltatmp)
   }

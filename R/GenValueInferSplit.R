@@ -22,7 +22,10 @@ GenValueInferSplit <- function(data=list(predictor, treatment, outcome), dataRef
   if (is.null(compareFun)){
     QEst <- data$outcome
   } else {
-    QEst <- apply(cbind(data$outcome, data$predictor), 1, function(t){ks(dataRef$predictor, compareFun(t[1], dataRef$outcome), t[-1])})
+    fitMAVE <- MAVE::mave(outcome~predictor, data=dataRef)
+    selectDim <- MAVE::mave.dim(fitMAVE)
+    reducedDim <- fitMAVE$dir[[selectDim$dim.min]]
+    QEst <- apply(cbind(data$outcome, data$predictor %*% reducedDim), 1, function(t){ks(dataRef$predictor %*% reducedDim, compareFun(t[1], dataRef$outcome), t[-1])})
   }
 
   if (method == 'concordance'){
