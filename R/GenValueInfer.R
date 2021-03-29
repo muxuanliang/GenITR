@@ -88,6 +88,8 @@ GenValueInfer <- function(data = list(predictor, treatment, outcome),
       value = value,
       se = se,
       upper = value + 1.96 * se,
-      lower = value - 1.96 * se
+      lower = value - 1.96 * se,
+      split = list(value=c(fit[[1]]$value, fit[[2]]$value), upper = c(fit[[1]]$upper, fit[[2]]$upper),
+                   lower = c(fit[[1]]$lower, fit[[2]]$lower))
     ))
   }
