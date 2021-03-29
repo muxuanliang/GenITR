@@ -19,7 +19,7 @@ GenITR <- function(data=list(predictor, treatment, outcome), dataRef=NULL, compa
   if (is.null(compareFun)){
     QEst <- data$outcome
   } else {
-    fitMAVE <- MAVE::mave(outcome~predictor, data=dataRef)
+    fitMAVE <- MAVE::mave(outcome~predictor, data=dataRef, method="csMAVE")
     selectDim <- MAVE::mave.dim(fitMAVE)
     reducedDim <- fitMAVE$dir[[selectDim$dim.min]]
     QEst <- apply(cbind(data$outcome, data$predictor %*% reducedDim), 1, function(t){ks(dataRef$predictor %*% reducedDim, compareFun(t[1], dataRef$outcome), t[-1])})

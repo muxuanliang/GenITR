@@ -168,7 +168,7 @@ getPropensityModel <- function(data, method=c('lm', 'glmnet', 'kernel'), sampleS
       if (screeningMethod == 'glmnet'){
         supp <- ans
       } else {
-        supp <- (ans <= 2)
+        supp <- (ans <= 4)
       }
     }
     dataTrain$predictor <- dataTrain$predictor[,supp]
