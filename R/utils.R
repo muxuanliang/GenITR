@@ -1,4 +1,4 @@
-# ks gets the kernel estimation
+# ks gets the kernel estimation return yy.test=E[yy|xx=xx.test]
 ks <- function(xx, yy, xx.test){
   nobs <- nrow(as.matrix(xx))
   nvars <- ncol(as.matrix(xx))
