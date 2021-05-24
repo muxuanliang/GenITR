@@ -1,4 +1,4 @@
-# ks gets the kernel estimation
+# ks gets the kernel estimation return yy.test=E[yy|xx=xx.test]
 ks <- function(xx, yy, xx.test){
   # trim
   xx <- xx * (abs(xx) < 10) + (-10) * (xx <= -10) + 10 * (xx >= 10)
