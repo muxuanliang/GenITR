@@ -5,7 +5,7 @@ GenValueInferSplit <-
            compareFun = function(y, yr) {
              as.numeric(y >= yr)
            },
-           method = c("concordance", "kernel", "kernel_aug"),
+           method = c("concordance", "kernel", "kernel_aug", "song"),
            propensityEst = NULL,
            outcomeEst = NULL,
            propensityModel = 'kernel',
@@ -38,7 +38,7 @@ GenValueInferSplit <-
     if (is.null(compareFun)) {
       QEst <- data$outcome
     } else {
-      fitMAVE <- MAVE::mave(outcome ~ predictor, data = dataRef)
+      fitMAVE <- MAVE::mave(outcome ~ predictor, data = dataRef, method="csMAVE")
       selectDim <- MAVE::mave.dim(fitMAVE)
       reducedDim <- fitMAVE$dir[[selectDim$dim.min]]
       QEst <-
@@ -49,7 +49,36 @@ GenValueInferSplit <-
         })
     }
 
-    if (method == 'concordance') {
+    # if song's method is implemented
+    if (method == 'song'){
+      fit <- GenITR(
+        data = list(
+          predictor = data$predictor[sampleSplitIndex, ],
+          treatment = data$treatment[sampleSplitIndex],
+          outcome = data$outcome[sampleSplitIndex]
+        ),
+        dataRef = NULL,
+        compareFun = NULL,
+        propensityEst = propensityEst[sampleSplitIndex],
+        outcomeEst = switch(
+          is.null(outcomeEst),
+          'TRUE'=NULL,
+          'FALSE'=list(
+            control = outcomeEst$control[sampleSplitIndex],
+            treatment = outcomeEst$treatment[sampleSplitIndex]
+          )
+        ),
+        propensityModel = propensityModel,
+        outcomeModel = outcomeModel,
+        outcomeFormula = outcomeFormula,
+        propensityFormula = propensityFormula,
+        screeningMethod = screeningMethod,
+        outcomeScreeningFamily = outcomeScreeningFamily,
+        standardize = FALSE
+      )
+      predictedTreatment <-
+        as.numeric(data$predictor[!sampleSplitIndex, ] %*% fit$coef >= fit$thresh)
+    } else if (method == 'concordance') {
       fit <- GenITR(
           data = list(
             predictor = data$predictor[sampleSplitIndex, ],

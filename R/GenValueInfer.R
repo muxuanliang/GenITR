@@ -3,7 +3,7 @@ GenValueInfer <- function(data = list(predictor, treatment, outcome),
            compareFun = function(y, yr) {
              as.numeric(y >= yr)
            },
-           method = c("concordance", "kernel"),
+           method = c("concordance", "kernel", "song"),
            propensityEst = NULL,
            outcomeEst = NULL,
            propensityModel = 'kernel',
@@ -12,11 +12,11 @@ GenValueInfer <- function(data = list(predictor, treatment, outcome),
            propensityFormula = NULL,
            screeningMethod = "SIRS",
            outcomeScreeningFamily = 'Gaussian',
-           standardize = TRUE) {
+           standardize = TRUE, alpha=0.8) {
     totalSampleSize <- NROW(data$predictor)
     numberPredictor <- NCOL(data$predictor)
 
-    sampleSplitIndex <- (rnorm(totalSampleSize) > 0)
+    sampleSplitIndex <- (rbinom(totalSampleSize,1,alpha) > 0)
     # standardize or not
     if (standardize) {
       data$predictor <- scale(data$predictor)
@@ -34,7 +34,7 @@ GenValueInfer <- function(data = list(predictor, treatment, outcome),
     if (is.null(compareFun)) {
       QEst <- data$outcome
     } else {
-      fitMAVE <- MAVE::mave(outcome ~ predictor, data = dataRef)
+      fitMAVE <- MAVE::mave(outcome ~ predictor, data = dataRef, method="csMAVE")
       selectDim <- MAVE::mave.dim(fitMAVE)
       reducedDim <- fitMAVE$dir[[selectDim$dim.min]]
       QEst <-
@@ -48,7 +48,7 @@ GenValueInfer <- function(data = list(predictor, treatment, outcome),
     # infer on split data
     fit <- NULL
     data$outcome <- QEst
-    fit[[1]] <-
+    fit <-
       GenValueInferSplit(
         data = data,
         dataRef = NULL,
@@ -65,31 +65,11 @@ GenValueInfer <- function(data = list(predictor, treatment, outcome),
         outcomeScreeningFamily = outcomeScreeningFamily,
         standardize = FALSE
       )
-    fit[[2]] <-
-      GenValueInferSplit(
-        data = data,
-        dataRef = NULL,
-        sampleSplitIndex = (!sampleSplitIndex),
-        compareFun = NULL,
-        method = method,
-        propensityEst = propensityEst,
-        outcomeEst = outcomeEst,
-        propensityModel = propensityModel,
-        outcomeModel = outcomeModel,
-        outcomeFormula = outcomeFormula,
-        propensityFormula = propensityFormula,
-        screeningMethod = screeningMethod,
-        outcomeScreeningFamily = outcomeScreeningFamily,
-        standardize = FALSE
-      )
-    value <- (fit[[1]]$value + fit[[2]]$value) / 2
-    se <- sqrt((fit[[1]]$sd ^ 2 + fit[[2]]$sd ^ 2) / 2) / sqrt(totalSampleSize)
+    value <- fit$value
+    se <- fit$sd / sqrt(sum(!sampleSplitIndex))
     return(list(
       value = value,
       se = se,
       upper = value + 1.96 * se,
-      lower = value - 1.96 * se,
-      split = list(value=c(fit[[1]]$value, fit[[2]]$value), upper = c(fit[[1]]$upper, fit[[2]]$upper),
-                   lower = c(fit[[1]]$lower, fit[[2]]$lower))
-    ))
+      lower = value - 1.96 * se))
   }

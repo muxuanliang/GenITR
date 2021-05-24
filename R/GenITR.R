@@ -22,7 +22,7 @@ GenITR <- function(data=list(predictor, treatment, outcome), dataRef=NULL, compa
     fitMAVE <- MAVE::mave(outcome~predictor, data=dataRef, method="csMAVE")
     selectDim <- MAVE::mave.dim(fitMAVE)
     reducedDim <- fitMAVE$dir[[selectDim$dim.min]]
-    QEst <- apply(cbind(data$outcome, data$predictor %*% reducedDim), 1, function(t){ks(dataRef$predictor %*% reducedDim, compareFun(t[1], dataRef$outcome), t[-1])})
+    QEst <- apply(cbind(data$outcome, data$predictor %*% reducedDim), 1, function(t){ks(dataRef$predictor %*% reducedDim, compareFun(t[1], dataRef$outcome), array(t[-1], c(1,selectDim$dim.min)))})
   }
 
 
@@ -42,5 +42,5 @@ GenITR <- function(data=list(predictor, treatment, outcome), dataRef=NULL, compa
   thresh <- (fit[[1]]$thresh+fit[[2]]$thresh)/2
   cov <- (fit[[1]]$cov+fit[[2]]$cov)/2
 
-  list(coef = coef, thresh = thresh, QEst = QEst, se = sqrt(diag(cov)/size), D = list(fit[[1]]$D, fit[[2]]$D), predictor = list(data$predictor[sampleSplitIndex,], data$predictor[!sampleSplitIndex,]))
+  list(coef = coef, thresh = thresh, QEst = QEst, se = c(0,sqrt(diag(cov)/size)), D = list(fit[[1]]$D, fit[[2]]$D), predictor = list(data$predictor[sampleSplitIndex,], data$predictor[!sampleSplitIndex,]))
 }

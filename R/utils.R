@@ -1,5 +1,10 @@
 # ks gets the kernel estimation
 ks <- function(xx, yy, xx.test){
+  # trim
+  xx <- xx * (abs(xx) < 10) + (-10) * (xx <= -10) + 10 * (xx >= 10)
+  xx.test <- xx.test * (abs(xx.test) < 10) + (-10) * (xx.test <= -10) + 10 * (xx.test >= 10)
+
+  # fit
   nobs <- nrow(as.matrix(xx))
   nvars <- ncol(as.matrix(xx))
   hopt <- (4/(nvars+2))^(1/(nvars+4)) * (nobs^(-1/(nvars+4)))
@@ -11,10 +16,10 @@ ks <- function(xx, yy, xx.test){
     }
     weighted.mean(yy, weight)
   }
-  if (is.null(dim(xx.test)) || NROW(xx.test)==1) {
+  if (nrow(as.matrix(xx.test))==1) {
     yy.test <- wm(xx.test)
   } else {
-    if (nvars==1){
+    if (ncol((as.matrix(xx.test)))==1){
       yy.test <- sapply(as.matrix(xx.test), function(t){
         wm(t)
       })
@@ -54,7 +59,7 @@ getOutcomeModel <- function(data, method=c('lm', 'glmnet', 'kernel', 'others'), 
   prediction <- NULL
   dataControl <- list(predictor=data$predictor[(!sampleSplitIndex) & (data$treatment==FALSE),], outcome=data$outcome[(!sampleSplitIndex) & (data$treatment==FALSE)])
   dataTreatment <- list(predictor=data$predictor[(!sampleSplitIndex) & (data$treatment==TRUE),], outcome=data$outcome[(!sampleSplitIndex) & (data$treatment==TRUE)])
-  if (0.05*size >= p){
+  if (0.05*size >= p || screeningMethod=="Non"){
     supp$control <- supp$treatment <- rep(TRUE, times = p)
     if ((method != 'lm')&&(method != 'glmnet')){
       ans1 <- screening(data$predictor[data$treatment==FALSE,], data$outcome[data$treatment==FALSE], method = screeningMethod, family = outcomeScreeningFamily)
@@ -123,6 +128,19 @@ getOutcomeModel <- function(data, method=c('lm', 'glmnet', 'kernel', 'others'), 
     if (sum(supp$treatment) > 0){
       prediction$treatment <- ks(dataTreatment$predictor, dataTreatment$outcome, dataPredict$treatment)
     }
+  } else if (method == 'dr') {
+    if (sum(supp$control) > 0){
+      fitMAVE <- MAVE::mave(outcome ~ predictor, data = dataControl, method="csMAVE")
+      selectDim <- MAVE::mave.dim(fitMAVE)
+      reducedDim <- fitMAVE$dir[[selectDim$dim.min]]
+      prediction$control <- ks(dataControl$predictor %*% reducedDim, dataControl$outcome, dataPredict$control%*% reducedDim)
+    }
+    if (sum(supp$treatment) > 0){
+      fitMAVE <- MAVE::mave(outcome ~ predictor, data = dataTreatment, method="csMAVE")
+      selectDim <- MAVE::mave.dim(fitMAVE)
+      reducedDim <- fitMAVE$dir[[selectDim$dim.min]]
+      prediction$treatment <- ks(dataTreatment$predictor%*% reducedDim, dataTreatment$outcome, dataPredict$treatment%*% reducedDim)
+    }
   } else {
     if (sum(supp$control) > 0){
       fit$control <- eval(parse(text=model.gam(dataControl)))
@@ -149,7 +167,7 @@ getPropensityModel <- function(data, method=c('lm', 'glmnet', 'kernel'), sampleS
   }
   prediction <- NULL
   dataTrain <- list(predictor=data$predictor[(!sampleSplitIndex),], treatment=data$treatment[(!sampleSplitIndex)])
-  if (0.05*size >= p){
+  if (0.05*size >= p || screeningMethod=="Non"){
     supp$control <- supp$treatment <- rep(TRUE, times = p)
     if ((method != 'lm')&&(method != 'glmnet')){
       ans <- screening(data$predictor, data$treatment, method = screeningMethod, family = 'binomial')
@@ -158,6 +176,7 @@ getPropensityModel <- function(data, method=c('lm', 'glmnet', 'kernel'), sampleS
       } else {
         supp <- (ans <= p/2)
       }
+      dataTrain$predictor <- dataTrain$predictor[,supp]
     }
   }
   if ((0.05*size < p) || (method == 'glmnet')) {
@@ -198,6 +217,14 @@ getPropensityModel <- function(data, method=c('lm', 'glmnet', 'kernel'), sampleS
   } else if (method == 'kernel') {
     if (sum(supp) > 0){
       prediction <- ks(dataTrain$predictor, dataTrain$treatment, dataPredict)
+      prediction <- (prediction > 0.9) * 0.9 + (prediction < 0.1) * 0.1 + (prediction < 0.9) * (prediction > 0.1) * prediction
+    }
+  } else if (method == 'dr') {
+    if (sum(supp) > 0){
+      fitMAVE <- MAVE::mave(treatment ~ predictor, data = dataTrain, method="csMAVE")
+      selectDim <- MAVE::mave.dim(fitMAVE)
+      reducedDim <- fitMAVE$dir[[selectDim$dim.min]]
+      prediction <- ks(dataTrain$predictor %*% reducedDim, dataTrain$treatment, dataPredict%*% reducedDim)
       prediction <- (prediction > 0.9) * 0.9 + (prediction < 0.1) * 0.1 + (prediction < 0.9) * (prediction > 0.1) * prediction
     }
   }
