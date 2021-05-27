@@ -1,6 +1,7 @@
 GenITR <- function(data=list(predictor, treatment, outcome), dataRef=NULL, compareFun = function(y, yr){as.numeric(y >= yr)}, sampleSplitIndex = NULL, propensityEst = NULL, outcomeEst = NULL, propensityModel = 'kernel', outcomeModel = 'kernel', outcomeFormula = NULL, propensityFormula = NULL,
                    screeningMethod="SIRS", outcomeScreeningFamily = 'Gaussian', standardize = TRUE){
   size <- dim(data$predictor)[1]
+  p <- dim(data$predictor)[2]
   if (is.null(sampleSplitIndex)){
     sampleSplitIndex <- (rnorm(size) > 0)
   }
@@ -41,6 +42,13 @@ GenITR <- function(data=list(predictor, treatment, outcome), dataRef=NULL, compa
   coef <- (fit[[1]]$coef+fit[[2]]$coef)/2
   thresh <- (fit[[1]]$thresh+fit[[2]]$thresh)/2
   cov <- (fit[[1]]$cov+fit[[2]]$cov)/2
+  cov_full <- matrix(0, p, p)
+  cov_full[2:p, 2:p] <- cov
 
-  list(coef = coef, thresh = thresh, QEst = QEst, se = c(0,sqrt(diag(cov)/size)), D = list(fit[[1]]$D, fit[[2]]$D), predictor = list(data$predictor[sampleSplitIndex,], data$predictor[!sampleSplitIndex,]))
+  # normalized
+  coef_norm <- coef/sqrt(sum(coef^2))
+  trans_matrix <- 1/sqrt(sum(coef^2)) * (pracma::eye(p)-coef %*% t(coef)/sum(coef^2))
+  cov_trans <- trans_matrix %*% cov_full %*% t(trans_matrix)
+
+  list(coef = coef_norm, thresh = thresh, QEst = QEst, se = sqrt(diag(cov_trans)/size), D = list(fit[[1]]$D, fit[[2]]$D), predictor = list(data$predictor[sampleSplitIndex,], data$predictor[!sampleSplitIndex,]))
 }
