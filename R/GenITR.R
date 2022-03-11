@@ -1,5 +1,5 @@
 GenITR <- function(data=list(predictor, treatment, outcome), dataRef=NULL, compareFun = function(y, yr){as.numeric(y >= yr)}, sampleSplitIndex = NULL, propensityEst = NULL, outcomeEst = NULL, propensityModel = 'kernel', outcomeModel = 'kernel', outcomeFormula = NULL, propensityFormula = NULL,
-                   screeningMethod="SIRS", outcomeScreeningFamily = 'Gaussian', standardize = TRUE){
+                   screeningMethod="SIRS", outcomeScreeningFamily = 'Gaussian', standardize = TRUE, thresholdMethod = "optim"){
   size <- dim(data$predictor)[1]
   p <- dim(data$predictor)[2]
   if (is.null(sampleSplitIndex)){
@@ -32,11 +32,11 @@ GenITR <- function(data=list(predictor, treatment, outcome), dataRef=NULL, compa
   fit[[1]] <- GenITRSplit(data = list(predictor = data$predictor, treatment = data$treatment, outcome = QEst), propensityEst = propensityEst, outcomeEst = outcomeEst, sampleSplitIndex = sampleSplitIndex,
                      outcomeModel = outcomeModel, outcomeFormula = outcomeFormula, propensityModel = propensityModel,
                      propensityFormula = propensityFormula, screeningMethod = screeningMethod,
-                     outcomeScreeningFamily = outcomeScreeningFamily)
+                     outcomeScreeningFamily = outcomeScreeningFamily, thresholdMethod = thresholdMethod)
   fit[[2]] <- GenITRSplit(data = list(predictor = data$predictor, treatment = data$treatment, outcome = QEst), propensityEst = propensityEst, outcomeEst = outcomeEst, sampleSplitIndex = (!sampleSplitIndex),
                           outcomeModel = outcomeModel, outcomeFormula = outcomeFormula, propensityModel = propensityModel,
                           propensityFormula = propensityFormula, screeningMethod = screeningMethod,
-                          outcomeScreeningFamily = outcomeScreeningFamily)
+                          outcomeScreeningFamily = outcomeScreeningFamily, thresholdMethod = thresholdMethod)
 
   # aggregate
   coef <- (fit[[1]]$coef+fit[[2]]$coef)/2

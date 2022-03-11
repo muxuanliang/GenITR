@@ -7,7 +7,7 @@ GenITRSplit <- function(data = list(predictor, treatment, outcome),
            propensityModel = c('lm', 'glmnet', 'kernel'),
            propensityFormula = NULL,
            screeningMethod = "SIRS",
-           outcomeScreeningFamily = "Gaussian") {
+           outcomeScreeningFamily = "Gaussian", thresholdMethod="optim") {
     ## fit propnesity and outcome model
     size <- dim(data$predictor)[1]
     if (is.null(sampleSplitIndex)) {
@@ -87,9 +87,16 @@ GenITRSplit <- function(data = list(predictor, treatment, outcome),
       - mean(weight_positive * (sgn_est == TRUE) + weight_negative * (sgn_est ==
                                                                         FALSE))
     }
-    fit_thresh <-
-      optimize(targetFun, interval = c(min(link), max(link)))
-    thresh <- fit_thresh$minimum
+    if (thresholdMethod=="optim"){
+      fit_thresh <-
+        optimize(targetFun, interval = c(min(link), max(link)))
+      thresh <- fit_thresh$minimum
+    } else {
+      grid <- link
+      value <- sapply(grid, targetFun)
+      thresh <- grid[which.min(value)]
+    }
+
 
     ### estimate sd of coef
     # normalize coef
