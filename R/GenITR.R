@@ -2,6 +2,7 @@ GenITR <- function(data=list(predictor, treatment, outcome), dataRef=NULL, compa
                    screeningMethod="SIRS", outcomeScreeningFamily = 'Gaussian', standardize = TRUE, thresholdMethod = "optim"){
   size <- dim(data$predictor)[1]
   p <- dim(data$predictor)[2]
+  data$predictor <- as.matrix(data$predictor)
   if (is.null(sampleSplitIndex)){
     sampleSplitIndex <- (rnorm(size) > 0)
   }
@@ -20,6 +21,7 @@ GenITR <- function(data=list(predictor, treatment, outcome), dataRef=NULL, compa
   if (is.null(compareFun)){
     QEst <- data$outcome
   } else {
+    dataRef$predictor <- as.matrix(dataRef$predictor)
     fitMAVE <- MAVE::mave(outcome~predictor, data=dataRef, method="csMAVE")
     selectDim <- MAVE::mave.dim(fitMAVE)
     reducedDim <- fitMAVE$dir[[selectDim$dim.min]]

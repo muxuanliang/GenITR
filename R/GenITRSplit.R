@@ -87,16 +87,21 @@ GenITRSplit <- function(data = list(predictor, treatment, outcome),
       - mean(weight_positive * (sgn_est == TRUE) + weight_negative * (sgn_est ==
                                                                         FALSE))
     }
-    if (thresholdMethod=="optim"){
-      fit_thresh <-
-        optimize(targetFun, interval = c(min(link), max(link)))
-      thresh <- fit_thresh$minimum
-    } else {
-      grid <- link
-      value <- sapply(grid, targetFun)
-      thresh <- grid[which.min(value)]
-    }
-
+# <<<<<<< HEAD
+#     if (thresholdMethod=="optim"){
+#       fit_thresh <-
+#         optimize(targetFun, interval = c(min(link), max(link)))
+#       thresh <- fit_thresh$minimum
+#     } else {
+#       grid <- link
+#       value <- sapply(grid, targetFun)
+#       thresh <- grid[which.min(value)]
+#     }
+#
+# =======
+    fit_thresh <- sapply(link, targetFun)
+    thresh <- link[which.min(fit_thresh)]
+#>>>>>>> 914dacf (minor changes)
 
     ### estimate sd of coef
     # normalize coef
@@ -125,7 +130,7 @@ GenITRSplit <- function(data = list(predictor, treatment, outcome),
     list(
       coef = c(1,coef),
       thresh = thresh,
-      cov = solve(V+0.001*diag(1, ndim-1, ndim-1)) %*% Delta %*% solve(V+0.001*diag(1, ndim-1, ndim-1)),
+      cov = solve(V+0.01*diag(1, ndim-1, ndim-1)) %*% Delta %*% solve(V+0.01*diag(1, ndim-1, ndim-1)),
       D = weight_diff
     )
   }
