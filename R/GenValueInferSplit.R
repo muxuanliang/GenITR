@@ -1,3 +1,74 @@
+#' Internal value estimation on a single sample split
+#'
+#' Internal helper function used by `GenValueInfer()` to estimate the value of
+#' an individualized treatment rule on one sample split. The function optionally
+#' standardizes predictors, constructs a reference dataset, estimates a
+#' transformed outcome, fits a treatment rule using one of several methods, and
+#' then evaluates the rule on the held-out subsample using an augmented inverse
+#' probability weighted estimator.
+#'
+#' @param data A list containing:
+#' \describe{
+#'   \item{predictor}{A numeric matrix or data frame of predictors/covariates.}
+#'   \item{treatment}{A treatment assignment vector.}
+#'   \item{outcome}{An outcome vector.}
+#' }
+#' @param dataRef Optional reference dataset used to estimate the comparison-based
+#' transformed outcome. If `NULL`, the untreated group (`treatment == 0`) from
+#' `data` is used as the reference sample.
+#' @param sampleSplitIndex Optional logical vector indicating the training split.
+#' If `NULL`, a random split is generated.
+#' @param compareFun A function comparing an observed outcome `y` with a
+#' reference outcome `yr`. The default is
+#' `function(y, yr) as.numeric(y >= yr)`. If `NULL`, the observed outcome is
+#' used directly.
+#' @param method Character string specifying the method used to estimate the
+#' treatment rule. Supported options are `"concordance"`, `"kernel"`,
+#' `"kernel_aug"`, and `"song"`.
+#' @param propensityEst Optional pre-estimated propensity scores.
+#' @param outcomeEst Optional pre-estimated outcome regression values. If
+#' provided, it should be a list with components `control` and `treatment`.
+#' @param propensityModel Character string specifying the propensity score model.
+#' Default is `"kernel"`.
+#' @param outcomeModel Character string specifying the outcome regression model.
+#' Default is `"kernel"`.
+#' @param outcomeFormula Optional formula used for the outcome model.
+#' @param propensityFormula Optional formula used for the propensity model.
+#' @param screeningMethod Variable screening method used in nuisance model
+#' fitting. Default is `"SIRS"`.
+#' @param outcomeScreeningFamily Family used for outcome screening. Default is
+#' `"Gaussian"`.
+#' @param standardize Logical; whether to standardize predictors before fitting.
+#' Default is `TRUE`.
+#'
+#' @return A list with components:
+#' \describe{
+#'   \item{value}{Estimated value of the treatment rule.}
+#'   \item{se}{Estimated standard error of the value estimator.}
+#'   \item{upper}{Upper bound of the approximate 95\% confidence interval.}
+#'   \item{lower}{Lower bound of the approximate 95\% confidence interval.}
+#'   \item{sd}{Estimated standard deviation of the influence-function-based
+#'   pseudo-outcome.}
+#' }
+#'
+#' @details
+#' This function is not intended for direct use by package users. It is the
+#' computational engine behind `GenValueInfer()`. Depending on `method`, it
+#' estimates the treatment rule using:
+#' \enumerate{
+#'   \item `"song"`: a rule estimated by `GenITR()` using the observed or
+#'   transformed outcome;
+#'   \item `"concordance"`: a concordance-based rule estimated by `GenITR()`;
+#'   \item `"kernel"`: a kernel-smoothed contrast between treatment groups;
+#'   \item `"kernel_aug"`: an augmented kernel rule using fitted contrast
+#'   quantities from `GenITR()`.
+#' }
+#'
+#' The final value is computed on the held-out subsample using an augmented
+#' inverse probability weighted estimator.
+#'
+#' @keywords internal
+#' @noRd
 GenValueInferSplit <-
   function(data = list(predictor, treatment, outcome),
            dataRef = NULL,

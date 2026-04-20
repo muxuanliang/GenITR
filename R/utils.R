@@ -1,4 +1,6 @@
 # ks gets the kernel estimation return yy.test=E[yy|xx=xx.test]
+#' @keywords internal
+#' @noRd
 ks <- function(xx, yy, xx.test){
   # trim
   xx <- xx * (abs(xx) < 10) + (-10) * (xx <= -10) + 10 * (xx >= 10)
@@ -33,6 +35,8 @@ ks <- function(xx, yy, xx.test){
 }
 
 # model.gam gets the gam regression function given data
+#' @keywords internal
+#' @noRd
 model.gam <- function(data){
   p <- dim(data$predictor)[2]
   expr <- "mgcv::gam(outcome~"
@@ -44,6 +48,8 @@ model.gam <- function(data){
 }
 
 # getOutcomeModel contains the outcome regression model
+#' @keywords internal
+#' @noRd
 getOutcomeModel <- function(data, method=c('lm', 'glmnet', 'kernel', 'others'), sampleSplitIndex, Formula = NULL, predictAll = FALSE, screeningMethod="SIRS", outcomeScreeningFamily='Gaussian'){
   p <- dim(data$predictor)[2]
   size <- dim(data$predictor)[1]
@@ -155,6 +161,8 @@ getOutcomeModel <- function(data, method=c('lm', 'glmnet', 'kernel', 'others'), 
 }
 
 # getPropensityModel contains the outcome regression model
+#' @keywords internal
+#' @noRd
 getPropensityModel <- function(data, method=c('lm', 'glmnet', 'kernel'), sampleSplitIndex, Formula = NULL, predictAll = FALSE, screeningMethod="SIRS"){
   p <- dim(data$predictor)[2]
   size <- dim(data$predictor)[1]
@@ -232,6 +240,8 @@ getPropensityModel <- function(data, method=c('lm', 'glmnet', 'kernel'), sampleS
 }
 
 # screening
+#' @keywords internal
+#' @noRd
 screening <- function(x, y, method='glmnet', family='Gaussian'){
   var <- apply(x, 2, sd)
   supp <- order(var, decreasing = TRUE)
