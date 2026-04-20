@@ -47,7 +47,7 @@ If hosted on GitHub, installation can be done with:
 
 ```r
 # install.packages("devtools")
-devtools::install_github("your_username/GenITR")
+devtools::install_github("muxuanliang/GenITR")
 ```
 
 ## Example
