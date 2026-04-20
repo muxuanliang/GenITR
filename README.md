@@ -32,7 +32,11 @@ These scripts include code for:
 
 The `real_data/` folder contains code used for the real data application and analysis pipeline.
 
-The real-data application uses the MIMIC-III database. We **cannot redistribute these data** because access is controlled through PhysioNet under a data use agreement. Our analytic dataset was constructed from MIMIC-III by following Feng et. al [1] and the corresponding SQL workflow in the \texttt{echo-mimiciii} repository (\url{https://github.com/nus-mornin-lab/echo-mimiciii}). Authorized users may obtain MIMIC-III from PhysioNet, recreate the dataset using that workflow, and then follow the code provided in our repository to reproduce the real-data analysis results.
+The real-data application uses the MIMIC-III database. We cannot redistribute these data because access is controlled through PhysioNet under a data use agreement. Our analytic dataset was constructed from MIMIC-III by following Feng et al. [1] and the corresponding SQL workflow in the `echo-mimiciii` repository (<https://github.com/nus-mornin-lab/echo-mimiciii>). Authorized users may obtain MIMIC-III from PhysioNet, recreate the analytic dataset using that workflow, and then follow the code provided in this repository to reproduce the real-data analysis results.
+
+## Reference
+
+[1] Feng M, McSparron JI, Kien DT, Stone DJ, Roberts DH, Schwartzstein RM, Vieillard-Baron A, Celi LA. Transthoracic echocardiography and mortality in sepsis: analysis of the MIMIC-III database. *Intensive Care Medicine*. 2018 Jun;44(6):884-892.
 
 ## Installation
 
