@@ -32,7 +32,7 @@ These scripts include code for:
 
 The `real_data/` folder contains code used for the real data application and analysis pipeline.
 
-The raw real dataset is **not included in this repository** due to privacy and data-use restrictions. Users interested in reproducing the real data analysis should supply their own appropriately formatted dataset and modify the file paths as needed.
+The real-data application uses the MIMIC-III database. We **cannot redistribute these data** because access is controlled through PhysioNet under a data use agreement. Our analytic dataset was constructed from MIMIC-III by following Feng et. al [1] and the corresponding SQL workflow in the \texttt{echo-mimiciii} repository (\url{https://github.com/nus-mornin-lab/echo-mimiciii}). Authorized users may obtain MIMIC-III from PhysioNet, recreate the dataset using that workflow, and then follow the code provided in our repository to reproduce the real-data analysis results.
 
 ## Installation
 
@@ -93,7 +93,7 @@ fit <- GenITR(
   compareFun = NULL
 )
 
-fit
+fit$coef
 ```
 
 You can also perform inference on the value of the estimated rule:
