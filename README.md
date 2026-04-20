@@ -53,9 +53,10 @@ If hosted on GitHub, installation can be done with:
 # install.packages("devtools")
 devtools::install_github("muxuanliang/GenITR")
 ```
-**Note for macOS users:** if `MAVE`  (one dependence pakcage) is temporarily unavailable as a CRAN binary for your R version/platform, install it from source first:
+**Note for macOS users:** if `MAVE`  (one dependence package) is temporarily unavailable as a CRAN binary for your R version/platform, install it from source first:
 ```r
 install.packages("MAVE", repos = "https://cran.r-project.org", type = "source")
+```
 
 ## Example
 
