@@ -121,4 +121,4 @@ devtools::document()
 
 ## License
 
-Please add your preferred license information here.
+MIT License
